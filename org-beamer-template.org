@@ -53,24 +53,29 @@ with its own headline, is displayed in a block:
 - the second (right) column has an image and is enclosed in an
   @example@ block
 
-** Babel
+** A test
 
-*** Haskell code
-#+name: haskellexample
-#+begin_src haskell :exports results
-main :: IO ()
-main = putStrLn "Hello!"
-#+end_src
+*** Test here
 
-#+results: haskellexample
-: Hello!
+### Part.Chapter.Section.Test
+
+# ** Babel
+
+# *** Haskell code
+# #+name: haskellexample
+# #+begin_src haskell :exports results :results output
+# putStrLn "Hello!"
+# #+end_src
+
+# #+results: haskellexample
+# : Hello!
 
 ** A diagram
 *** Diagram!
 #+name: graph-info-figure
-#+begin_src plantuml :file diagram1.svg :cmdline -tsvg :results file
-  Alice -> Bob: synchronous call
-  Alice ->> Bob: asynchronous call
+#+begin_src plantuml :file diagram1.svg :results file
+  Alice -> Bob: sync call
+  Alice ->> Bob: async call
 #+end_src
 
 #+ATTR_LATEX: :height 4cm
@@ -79,7 +84,7 @@ main = putStrLn "Hello!"
 ** A diagram
 *** Another!
 #+name: ditaa-figure
-#+begin_src ditaa :file diagram2.svg :cmdline --svg :results file
+#+begin_src ditaa :file diagram2.svg :cmdline -T --svg :results file
 +-----------+              +----------+
 |   Foo     |              |   Bar    |
 +------+----+              +------+---+
@@ -122,6 +127,7 @@ main = putStrLn "Hello!"
 #+name: dot-figure
 #+begin_src dot :file diagram4.svg :cmdline -Tsvg :results file
 digraph {
+    bgcolor=transparent;
     rankdir=LR;
     2 [label=hello];
     5 [label=interleave];
@@ -142,67 +148,44 @@ digraph {
 # ** A diagram
 # *** Yet another!
 # #+name: diagrams-figure
-# #+BEGIN_SRC diagrams :file diagram3.svg :results file :width 400
-# dia = circle 1 # fc cyan
+# #+BEGIN_SRC diagrams :file diagram5.svg :results file :width 400
+# dia = circle 1 # fc red
 # #+END_SRC
 
 # #+ATTR_LATEX: :height 4cm
 # #+results: diagrams-figure
-# [[file:diagram3.svg]]
+# [[file:diagram5.svg]]
 * Colophon
 
 #+STARTUP: beamer
 #+STARTUP: content fninline hidestars
 
-#+LaTeX_CLASS: beamer
-#+LaTeX_CLASS_OPTIONS: [utf8x,notes,15pt]
-
-#+LATEX_HEADER: \usepackage{tikz}
-#+LATEX_HEADER: \usepackage{tikz-cd}
-#+LATEX_HEADER_EXTRA: \usepackage{svg}
-#+LATEX_HEADER_EXTRA: \usepackage{export}
-
-#+BEAMER_THEME: [height=16mm] Rochester
-#+BEAMER_COLOR: seahorse
-
-#+OPTIONS:   H:2 toc:nil
-
-#+BEAMER_HEADER: \setbeamertemplate{navigation symbols}{}
-#+BEAMER_HEADER: \usepackage{courier}
-#+BEAMER_HEADER: \usepackage{helvet}
-
-#+BEAMER_HEADER: \usepackage{pdfcomment}
-#+BEAMER_HEADER: \renewcommand{\note}[1]{\marginnote{\pdfcomment[icon=Note]{#1}}}
-
-#+BEAMER_HEADER: \tikzcdset{/tikz/commutative diagrams/background color=lightorchid}
-
-#+BEAMER_HEADER: \usepackage{mathtools}
-#+BEAMER_HEADER: \SetUnicodeOption{mathletters}
-#+BEAMER_HEADER: \DeclareUnicodeCharacter{952}{\theta}
-
-#+BEAMER_HEADER: \usepackage{minted}
-
-# #+name: setup-minted
-# #+begin_src emacs-lisp :exports both :results silent
-# (setq org-latex-listings 'minted)
-# (setq org-latex-minted-options
-#       '(("fontsize" "\\footnotesize")
-#         ("linenos" "true")))
-# #+end_src
-
-# #+BEAMER_HEADER: \renewcommand{\arraystretch}{1.2}
-
-# #+BEAMER_HEADER: \let\svthefootnote\thefootnote
-# #+BEAMER_HEADER: \newcommand\blankfootnote[1]{%
-# #+BEAMER_HEADER:   \let\thefootnote\relax\footnotetext{#1}%
-# #+BEAMER_HEADER:   \let\thefootnote\svthefootnote%
-# #+BEAMER_HEADER:   }
-
-#+BEAMER_HEADER: \newcommand{\head}[1]{\begin{center}
-#+BEAMER_HEADER: \vspace{13mm}\hspace{-1mm}\Huge{{#1}}
-#+BEAMER_HEADER: \end{center}}
+#+OPTIONS: H:2 toc:nil
 
 #+SELECT_TAGS: export
 #+EXCLUDE_TAGS: noexport
 
 #+COLUMNS: %20ITEM %13BEAMER_env(Env) %6BEAMER_envargs(Args) %4BEAMER_col(Col) %7BEAMER_extra(Extra)
+
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [show notes,15pt]
+
+#+LATEX_HEADER_EXTRA: \usepackage{courier}
+#+LATEX_HEADER_EXTRA: \usepackage{helvet}
+#+LATEX_HEADER_EXTRA: \usepackage{svg}
+#+LATEX_HEADER_EXTRA: \usepackage{export}
+#+LATEX_HEADER_EXTRA: \usepackage{pdfcomment}
+#+LATEX_HEADER_EXTRA: \usepackage{unicode-math}
+#+LATEX_HEADER_EXTRA: \usepackage{minted}
+#+LATEX_HEADER_EXTRA: \usepackage{tikz}
+#+LATEX_HEADER_EXTRA: \usepackage{tikz-cd}
+
+#+BEAMER_THEME: [height=16mm] Rochester
+#+BEAMER_COLOR: seahorse
+
+#+BEAMER_HEADER: \setbeamertemplate{navigation symbols}{}
+#+BEAMER_HEADER: \renewcommand{\note}[1]{\marginnote{\pdfcomment[icon=Note]{#1}}}
+#+BEAMER_HEADER: \tikzcdset{/tikz/commutative diagrams/background color=lightorchid}
+#+BEAMER_HEADER: \newcommand{\head}[1]{\begin{center}
+#+BEAMER_HEADER: \vspace{13mm}\hspace{-1mm}\Huge{{#1}}
+#+BEAMER_HEADER: \end{center}}

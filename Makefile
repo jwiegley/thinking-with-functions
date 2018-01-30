@@ -16,19 +16,26 @@ present: all
 org-support-code.cabal: package.yaml
 	hpack
 
-# Ensure all examples work before building the slide deck
-%.tex: %.org Makefile Support.hs org-support-code.cabal
+dist/build/org-support-code/org-support-code: Main.hs org-support-code.cabal
 	cabal build
-	./dist/build/org-support-code/org-support-code
-	$(EMACS) -batch -L . -l support \
-	    --eval="(progn (find-file \"$<\") (extract-code-blocks) (setq org-export-latex-minted-options '((\"fontsize\" \"\\\\small\") (\"linenos\" \"true\"))) (org-beamer-export-to-latex))"
+
+# Ensure all examples work before building the slide deck
+%.tex: %.org Makefile dist/build/org-support-code/org-support-code
+	$(EMACS) --debug-init -batch -L . -l support -f perform-extraction $<
 
 %.pdf: %.tex
-	pdflatex -shell-escape -interaction nonstopmode $<
-	pdflatex -shell-escape -interaction nonstopmode $<
-	pdflatex -shell-escape -interaction nonstopmode $<
+	xelatex -shell-escape -interaction nonstopmode $<
+	xelatex -shell-escape -interaction nonstopmode $<
+	xelatex -shell-escape -interaction nonstopmode $<
 
 clean:
 	rm -fr html
 	rm -f *.tex *.pdf *.vrb *.aux *.log *.nav *.out *.snm *.toc *.upa
 	rm -f src/*.d src/*.vo src/*.glob
+
+watch:
+	fswatch --batch-marker --latency 2 -m poll_monitor \
+	    *.hs *.el *.org *.yaml Makefile \
+	    | while read event; do \
+	          [[ $$event == NoOp ]] && PATH=$(PWD):$(PATH) make; \
+	      done

@@ -1,6 +1,15 @@
+/*.log
+/*.nav
+/*.out
 /*.pdf
 /*.svg
 /*.tex
 /*.upa
+/*.vrb
+/*.snm
+/*.toc
+/*.cabal
+/_minted-org-beamer-template/
 /auto/
+/dist/
 /svg-inkscape/
