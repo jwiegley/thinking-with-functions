@@ -114,9 +114,41 @@ main = putStrLn "Hello!"
   \arrow[dr, dotted, "{(x,y)}" description] & & \\
     & X \times_Z Y \arrow[r, "p"] \arrow[d, "q"]
       & X \arrow[d, "f"] \\
-& Y \arrow[r, "g"] &Z
+    & Y \arrow[r, "g"] & Z
 \end{tikzcd}
   #+end_export
+** A diagram
+*** Can it be?!
+#+name: dot-figure
+#+begin_src dot :file diagram4.svg :cmdline -Tsvg :results file
+digraph {
+    rankdir=LR;
+    2 [label=hello];
+    5 [label=interleave];
+    8 [label=lanMapper];
+    1 -> 2 [color=red];
+    2 -> 3 [color=green];
+    3 -> 4 [color=blue];
+    4 -> 5 [color=red];
+    5 -> 6 [color=green];
+    6 -> 7 [color=blue];
+    7 -> 8 [color=red];
+}
+#+end_src
+
+#+ATTR_LATEX: :height 1cm
+#+results: dot-figure
+[[file:diagram4.svg]]
+# ** A diagram
+# *** Yet another!
+# #+name: diagrams-figure
+# #+BEGIN_SRC diagrams :file diagram3.svg :results file :width 400
+# dia = circle 1 # fc cyan
+# #+END_SRC
+
+# #+ATTR_LATEX: :height 4cm
+# #+results: diagrams-figure
+# [[file:diagram3.svg]]
 * Colophon
 
 #+STARTUP: beamer
@@ -128,6 +160,7 @@ main = putStrLn "Hello!"
 #+LATEX_HEADER: \usepackage{tikz}
 #+LATEX_HEADER: \usepackage{tikz-cd}
 #+LATEX_HEADER_EXTRA: \usepackage{svg}
+#+LATEX_HEADER_EXTRA: \usepackage{export}
 
 #+BEAMER_THEME: [height=16mm] Rochester
 #+BEAMER_COLOR: seahorse
