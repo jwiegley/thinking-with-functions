@@ -130,19 +130,16 @@ digraph {
     bgcolor=transparent;
     rankdir=LR;
     2 [label=hello];
-    5 [label=interleave];
-    8 [label=lanMapper];
     1 -> 2 [color=red];
+    1 -> 5 [color=red];
     2 -> 3 [color=green];
     3 -> 4 [color=blue];
-    4 -> 5 [color=red];
-    5 -> 6 [color=green];
-    6 -> 7 [color=blue];
-    7 -> 8 [color=red];
+    5 -> 6 [color=blue];
+    6 -> 4 [color=blue];
 }
 #+end_src
 
-#+ATTR_LATEX: :height 1cm
+#+ATTR_LATEX: :height 3cm
 #+results: dot-figure
 [[file:diagram4.svg]]
 # ** A diagram
@@ -152,7 +149,7 @@ digraph {
 # dia = circle 1 # fc red
 # #+END_SRC
 
-# #+ATTR_LATEX: :height 4cm
+# #+ATTR_LATEX: :height 10cm
 # #+results: diagrams-figure
 # [[file:diagram5.svg]]
 * Colophon
