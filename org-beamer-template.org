@@ -154,8 +154,8 @@ digraph {
 #+LaTeX_CLASS: beamer
 #+LaTeX_CLASS_OPTIONS: [show notes, t]
 
-#+LATEX_HEADER_EXTRA: \usepackage{courier}
-#+LATEX_HEADER_EXTRA: \usepackage{helvet}
+#+LATEX_HEADER_EXTRA: \usepackage{fontspec}
+#+LATEX_HEADER_EXTRA: \setmainfont{Tahoma}
 #+LATEX_HEADER_EXTRA: \usepackage{svg}
 #+LATEX_HEADER_EXTRA: \usepackage{export}
 #+LATEX_HEADER_EXTRA: \usepackage{pdfcomment}
