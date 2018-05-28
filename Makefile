@@ -1,9 +1,8 @@
-NAME = org-beamer-template
-
-PYTHON	 = /usr/bin/python
-PRESENT	 = /Applications/Misc/Présentation.app/Contents/MacOS/presentation.py
-PDF	 = $(NAME).pdf
-EMACS    = emacs
+NAME    = org-beamer-template
+PYTHON	= /usr/bin/python
+PRESENT	= /Applications/Misc/Présentation.app/Contents/MacOS/presentation.py
+PDF	= $(NAME).pdf
+EMACS   = emacs
 
 all: $(PDF)
 
@@ -32,6 +31,7 @@ clean:
 	rm -fr html
 	rm -f *.tex *.pdf *.vrb *.aux *.log *.nav *.out *.snm *.toc *.upa
 	rm -f src/*.d src/*.vo src/*.glob
+	rm -fr _minted-* auto diagram*.svg svg-inkscape *.cabal dist
 
 watch:
 	fswatch --batch-marker --latency 2 -m poll_monitor \
