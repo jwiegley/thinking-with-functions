@@ -1,7 +1,7 @@
 name:          org-support-code
 version:       0.1.0
 synopsis:      Helper code to be using with org-beamer
-github:        jwiegley/org-beamer-template
+github:        jwiegley/denotational-design
 license:       MIT
 author:        John Wiegley
 maintainer:    johnw@newartisans.com
@@ -20,6 +20,10 @@ dependencies:
   - unordered-containers >= 0.2.8.0
 
 tests:
-  org-support-code:
+  org-support-code-tests:
     main: Main.hs
     ghc-options: -threaded -rtsopts -with-rtsopts=-N
+
+executables:
+  org-support-code:
+    main: Main.hs

@@ -1,5 +1,5 @@
-{ rev      ? "49bdae006e66e70ad3245a463edc01b5749250d3"
-, sha256   ? "1ijsifmap47nfzg0spny94lmj66y3x3x8i6vs471bnjamka3dx8p"
+{ rev      ? "4477cf04b6779a537cdb5f0bd3dd30e75aeb4a3b"
+, sha256   ? "1i39wsfwkvj9yryj8di3jibpdg3b3j86ych7s9rb6z79k08yaaxc"
 , pkgs     ? import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
     inherit sha256; }) {
@@ -9,6 +9,32 @@
 }:
 
 let
+  org = pkgs.stdenv.mkDerivation rec {
+    name = "emacs-org-${version}";
+    version = "20160421";
+    src = pkgs.fetchFromGitHub {
+      owner  = "jwiegley";
+      repo   = "org-mode";
+      rev    = "db5257389231bd49e92e2bc66713ac71b0435eec";
+      sha256 = "073cmwgxga14r4ykbgp8w0gjp1wqajmlk6qv9qfnrafgpxic366m";
+    };
+    preBuild = ''
+      rm -f contrib/lisp/org-jira.el
+      makeFlagsArray=(
+        prefix="$out/share"
+        ORG_ADD_CONTRIB="org* ox*"
+      );
+    '';
+    preInstall = ''
+      perl -i -pe "s%/usr/share%$out%;" local.mk
+    '';
+    buildInputs = [ pkgs.emacs26 ] ++ (with pkgs; [ texinfo perl which ]);
+    meta = {
+      homepage = "https://elpa.gnu.org/packages/org.html";
+      license = pkgs.stdenv.lib.licenses.free;
+    };
+  };
+
   texFull = pkgs.texlive.combine {
     inherit (pkgs.texlive) scheme-full texdoc latex2e-help-texinfo;
     pkgFilter = pkg:
@@ -18,7 +44,7 @@ let
   };
 
   ignoredDirs = [
-    "html" ".diagrams_cache" "_minted-org-beamer-template"
+    "html" "_minted-denotational-design"
     "auto" "dist" "svg-inkscape"
   ];
 
@@ -39,8 +65,11 @@ let
          || any (suf: hasSuffix suf path) ignoredSuffixes);
   };
 
+  org-support-code =
+    pkgs.haskellPackages.callCabal2nix "org-support-code" ./. {};
+
 in pkgs.stdenv.mkDerivation rec {
-  name = "org-beamer-template";
+  name = "denotational-design";
   version = "1.0";
 
   src =
@@ -48,13 +77,49 @@ in pkgs.stdenv.mkDerivation rec {
     then null
     else filterSource ./.;
 
-  buildInputs = [ pkgs.emacsPackagesNg.org texFull ];
-  enableParallelBuilding = true;
+  buildInputs = [
+    org-support-code
+    org
+    texFull
+    pkgs.fontconfig
+    pkgs.liberation_ttf
+    pkgs.plantuml
+    pkgs.ditaa
+    pkgs.emacs26
+    pkgs.python27Packages.pygments
+    pkgs.inkscape.out
+    pkgs.which
+  ];
 
-  buildPhase = "make";
+  patchPhase = ''
+    substituteInPlace support.el \
+      --replace "/run/current-system/sw/lib/plantuml.jar" \
+                "${pkgs.plantuml}/lib/plantuml.jar"
+    substituteInPlace support.el \
+      --replace "/run/current-system/sw/lib/ditaa.jar" \
+                "${pkgs.ditaa}/lib/ditaa.jar"
+  '';
+
+  preConfigure = ''
+    export HOME=$NIX_BUILD_TOP
+
+    mkdir chroot-fontconfig
+    cat ${pkgs.fontconfig.out}/etc/fonts/fonts.conf > chroot-fontconfig/fonts.conf
+    sed -e 's@</fontconfig>@@' -i chroot-fontconfig/fonts.conf
+    echo "<dir>${pkgs.liberation_ttf}</dir>" >> chroot-fontconfig/fonts.conf
+    echo "</fontconfig>" >> chroot-fontconfig/fonts.conf
+
+    export FONTCONFIG_FILE=$(pwd)/chroot-fontconfig/fonts.conf
+  '';
+
+  buildPhase = with pkgs.emacs26PackagesNg; ''
+    export PATH=$PATH:${pkgs.python27Packages.pygments}/bin
+    make EMACS_ARGS="-L ${org}/share/emacs/site-lisp/org \
+                     -L ${haskell-mode}/share/emacs/site-lisp/elpa/$(echo ${haskell-mode.name} | sed 's/^emacs-//')"
+  '';
   installPhase = ''
     mkdir -p $out/share/pdf
-    cp -p org-beamer-template.pdf $out/share/pdf
+    cp -p denotational-design.pdf $out/share/pdf
   '';
 
   env = pkgs.buildEnv { name = name; paths = buildInputs; };

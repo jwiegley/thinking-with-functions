@@ -1,4 +1,4 @@
-NAME    = org-beamer-template
+NAME    = denotational-design
 PYTHON	= /usr/bin/python
 PRESENT	= /Applications/Misc/Présentation.app/Contents/MacOS/presentation.py
 PDF	= $(NAME).pdf
@@ -12,15 +12,9 @@ open: $(PDF)
 present: all
 	$(PYTHON) $(PRESENT) $(PDF)
 
-org-support-code.cabal: package.yaml
-	hpack
-
-dist/build/org-support-code/org-support-code: Main.hs org-support-code.cabal
-	cabal build
-
 # Ensure all examples work before building the slide deck
-%.tex: %.org Makefile dist/build/org-support-code/org-support-code
-	$(EMACS) --debug-init -batch -L . -l support -f perform-extraction $<
+%.tex: %.org Makefile
+	$(EMACS) --debug-init -batch $(EMACS_ARGS) -L . -l support -f perform-extraction $<
 
 %.pdf: %.tex
 	xelatex -shell-escape -interaction nonstopmode $<

@@ -1,0 +1,124 @@
+#+TITLE:     Denotational Design
+#+AUTHOR:    John Wiegley
+#+EMAIL:     johnw@newartisans.com
+#+DATE:      2018-09-04
+
+#+DESCRIPTION:
+#+KEYWORDS:
+#+LANGUAGE:  en
+
+\setbeamertemplate{footline}{}
+\setbeamerfont{block body}{size=\small}
+\definecolor{orchid}{RGB}{134, 134, 220}
+\definecolor{lightorchid}{RGB}{243, 243, 251}
+\setbeamercolor{block title}{fg=white,bg=orchid}
+\setbeamercolor{bgcolor}{fg=white,bg=blue}
+
+* Specification
+
+Choose the simplest mathematical object that reflects your intention:
+
+** Mathematical object
+#+begin_src haskell
+PublicKey → Sum Coin
+#+end_src
+*** This is often a function or a relation
+** Define a vocabulary for the domain in terms of this object
+Where does this vocabulary come from? It's a bad choice if it comes from a
+mind rooted in operational thinking. Are they a domain expert, or an engineer,
+or a mathematician? Each will bring their own biases into the process, which
+might be the incorrect vocabulary.
+
+For example, if you ask a programmer what an image is, he may not come up
+with a properly mathematical vocabulary for working with images.  Engineers
+are used to making machines do things, and so their vocabulary is typically
+machine-like.
+
+This requires thinking about the domain, and not the implementation *at all*.
+
+Conal starts with the result type of the denotation function, rather than the
+vocabulary.
+** Generalize the object as much as possible, erring on the side of naivety
+... because we're optimizing for simplicity in the specification
+
+a -> b?
+** Identify all algebras known for the object
+Functor
+Representable Functor
+Applicative
+Monad
+Monoid a => Monoid
+Category
+Cartesian?
+Closed?
+etc.
+
+* Representation
+
+** Choose a construction that represents a more concrete form
+May still be a function or relation, in which case it merely refines the
+specification; but it might be something concrete, like a data type, that
+provide a carrier for the algebras.
+
+* Denotation
+
+** Denote the more concrete form into the specification, using a function or relation
+denote : Repr -> Spec
+denoteP : Repr -> Spec -> Prop
+** Work out all algebraic homomorphisms over the denotation
+... for all algebras of the specification, including the established vocabulary
+** Solving these yields definitions of those algebras over the more concrete form
+       denote mempty   = mempty                 ; unknown: mempty on the left
+∀ u v, denote (u <> v) = denote u <> denote v   ; unknown: the mappend on the left
+
+Strengthing is one of the activities of this solving step.
+
+You now have an implementation of the specification for the concrete form
+which may be computable, or serve as a more refined specification.
+
+# Banking : Holder -> Amount
+
+# Transaction -> Banking -> Banking
+
+# + :: Int -> State Int ()
+
+# Monadic notation makes it very inconvenient for people not to single-thread
+# things.
+
+* Colophon
+
+#+STARTUP: beamer
+#+STARTUP: content fninline hidestars
+
+#+OPTIONS: H:2
+
+#+SELECT_TAGS: export
+#+EXCLUDE_TAGS: noexport
+
+#+COLUMNS: %20ITEM %13BEAMER_env(Env) %6BEAMER_envargs(Args) %4BEAMER_col(Col) %7BEAMER_extra(Extra)
+
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [show notes, t]
+
+#+LATEX_HEADER_EXTRA: \usepackage{fontspec}
+# #+LATEX_HEADER_EXTRA: \setmainfont{Helvetica Neue LT Std}
+#+LATEX_HEADER_EXTRA: \setmainfont{Liberation Serif}
+#+LATEX_HEADER_EXTRA: \setsansfont{Liberation Sans}
+#+LATEX_HEADER_EXTRA: \setmonofont[SmallCapsFont={Liberation Mono}]{Liberation Mono}
+#+LATEX_HEADER_EXTRA: \usepackage{svg}
+#+LATEX_HEADER_EXTRA: \usepackage{export}
+#+LATEX_HEADER_EXTRA: \usepackage{pdfcomment}
+#+LATEX_HEADER_EXTRA: \usepackage{unicode-math}
+#+LATEX_HEADER_EXTRA: \usepackage{minted}
+#+LATEX_HEADER_EXTRA: \usepackage{tikz}
+#+LATEX_HEADER_EXTRA: \usepackage{tikz-cd}
+
+#+BEAMER_THEME: [height=16mm] Rochester
+#+BEAMER_COLOR: seahorse
+
+#+BEAMER_HEADER: \setbeamertemplate{navigation symbols}{}
+#+BEAMER_HEADER: \renewcommand{\note}[1]{\marginnote{\pdfcomment[icon=Note]{#1}}}
+#+BEAMER_HEADER: \tikzcdset{/tikz/commutative diagrams/background color=lightorchid}
+#+BEAMER_HEADER: \newcommand{\head}[1]{\begin{center}
+#+BEAMER_HEADER: \vspace{13mm}\hspace{-1mm}\Huge{{#1}}
+#+BEAMER_HEADER: \end{center}}
