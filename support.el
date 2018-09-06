@@ -46,9 +46,8 @@
 (setq org-latex-listings 'minted)
 
 (setq org-latex-minted-options
-      '(("fontfamily" "courier")
-        ("fontsize" "\\footnotesize")
-        ("linenos" "true")
+      '(("fontsize" "\\footnotesize")
+        ("linenos" "false")
         ("xleftmargin" "2em")))
 
 (setq org-export-latex-minted-options

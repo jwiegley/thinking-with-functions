@@ -17,9 +17,9 @@ present: all
 	$(EMACS) --debug-init -batch $(EMACS_ARGS) -L . -l support -f perform-extraction $<
 
 %.pdf: %.tex
-	xelatex -shell-escape -interaction nonstopmode $<
-	xelatex -shell-escape -interaction nonstopmode $<
-	xelatex -shell-escape -interaction nonstopmode $<
+	xelatex -8bit -shell-escape -interaction nonstopmode $<
+	xelatex -8bit -shell-escape -interaction nonstopmode $<
+	xelatex -8bit -shell-escape -interaction nonstopmode $<
 
 clean:
 	rm -fr html

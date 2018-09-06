@@ -64,63 +64,81 @@ let
          || baseName == "result"
          || any (suf: hasSuffix suf path) ignoredSuffixes);
   };
-
+in rec {
   org-support-code =
-    pkgs.haskellPackages.callCabal2nix "org-support-code" ./. {};
+    pkgs.haskellPackages.callCabal2nix "org-support-code"
+      (with pkgs.stdenv.lib; cleanSourceWith {
+         src = ./.;
+         filter = path: type:
+           let baseName = baseNameOf path; in
+           builtins.elem baseName [
+             "Main.hs"
+             "package.yaml"
+           ];
+       }) {};
 
-in pkgs.stdenv.mkDerivation rec {
-  name = "denotational-design";
-  version = "1.0";
+  denotational-design = pkgs.stdenv.mkDerivation rec {
+    name = "denotational-design";
+    version = "1.0";
 
-  src =
-    if pkgs.lib.inNixShell
-    then null
-    else filterSource ./.;
+    src =
+      if pkgs.lib.inNixShell
+      then null
+      else filterSource ./.;
 
-  buildInputs = [
-    org-support-code
-    org
-    texFull
-    pkgs.fontconfig
-    pkgs.liberation_ttf
-    pkgs.plantuml
-    pkgs.ditaa
-    pkgs.emacs26
-    pkgs.python27Packages.pygments
-    pkgs.inkscape.out
-    pkgs.which
-  ];
+    buildInputs = [
+      org-support-code
+      org
+      texFull
+      pkgs.fontconfig
+      pkgs.liberation_ttf
+      pkgs.bash
+      pkgs.jdk8
+      pkgs.plantuml
+      pkgs.ditaa
+      pkgs.emacs26
+      pkgs.python27Packages.pygments
+      pkgs.inkscape.out
+      pkgs.which
+    ];
 
-  patchPhase = ''
-    substituteInPlace support.el \
-      --replace "/run/current-system/sw/lib/plantuml.jar" \
-                "${pkgs.plantuml}/lib/plantuml.jar"
-    substituteInPlace support.el \
-      --replace "/run/current-system/sw/lib/ditaa.jar" \
-                "${pkgs.ditaa}/lib/ditaa.jar"
-  '';
+    patchPhase = ''
+      substituteInPlace java \
+        --replace "/run/current-system/sw/bin/java" \
+                  "${pkgs.jdk8}/bin/java"
+      substituteInPlace java \
+        --replace "/bin/bash" \
+                  "${pkgs.bash}/bin/bash"
+      substituteInPlace support.el \
+        --replace "/run/current-system/sw/lib/plantuml.jar" \
+                  "${pkgs.plantuml}/lib/plantuml.jar"
+      substituteInPlace support.el \
+        --replace "/run/current-system/sw/lib/ditaa.jar" \
+                  "${pkgs.ditaa}/lib/ditaa.jar"
+    '';
 
-  preConfigure = ''
-    export HOME=$NIX_BUILD_TOP
+    preConfigure = ''
+      export HOME=$NIX_BUILD_TOP
 
-    mkdir chroot-fontconfig
-    cat ${pkgs.fontconfig.out}/etc/fonts/fonts.conf > chroot-fontconfig/fonts.conf
-    sed -e 's@</fontconfig>@@' -i chroot-fontconfig/fonts.conf
-    echo "<dir>${pkgs.liberation_ttf}</dir>" >> chroot-fontconfig/fonts.conf
-    echo "</fontconfig>" >> chroot-fontconfig/fonts.conf
+      mkdir chroot-fontconfig
+      cat ${pkgs.fontconfig.out}/etc/fonts/fonts.conf > chroot-fontconfig/fonts.conf
+      sed -e 's@</fontconfig>@@' -i chroot-fontconfig/fonts.conf
+      echo "<dir>${pkgs.liberation_ttf}</dir>" >> chroot-fontconfig/fonts.conf
+      echo "</fontconfig>" >> chroot-fontconfig/fonts.conf
 
-    export FONTCONFIG_FILE=$(pwd)/chroot-fontconfig/fonts.conf
-  '';
+      export FONTCONFIG_FILE=$(pwd)/chroot-fontconfig/fonts.conf
+    '';
 
-  buildPhase = with pkgs.emacs26PackagesNg; ''
-    export PATH=$PATH:${pkgs.python27Packages.pygments}/bin
-    make EMACS_ARGS="-L ${org}/share/emacs/site-lisp/org \
-                     -L ${haskell-mode}/share/emacs/site-lisp/elpa/$(echo ${haskell-mode.name} | sed 's/^emacs-//')"
-  '';
-  installPhase = ''
-    mkdir -p $out/share/pdf
-    cp -p denotational-design.pdf $out/share/pdf
-  '';
+    buildPhase = with pkgs.emacs26PackagesNg; ''
+      export PATH=$PATH:${pkgs.python27Packages.pygments}/bin
+      make EMACS_ARGS="-L ${org}/share/emacs/site-lisp/org \
+                       -L ${haskell-mode}/share/emacs/site-lisp/elpa/$(echo ${haskell-mode.name} | sed 's/^emacs-//')"
+    '';
+    installPhase = ''
+      mkdir -p $out/share/pdf
+      cp -p denotational-design.pdf $out/share/pdf
+    '';
 
-  env = pkgs.buildEnv { name = name; paths = buildInputs; };
+    env = pkgs.buildEnv { name = name; paths = buildInputs; };
+  };
 }

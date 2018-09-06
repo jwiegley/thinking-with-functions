@@ -1,7 +1,7 @@
-#+TITLE:     Denotational Design
-#+AUTHOR:    John Wiegley
-#+EMAIL:     johnw@newartisans.com
-#+DATE:      2018-09-04
+#+TITLE:     Denotational Design \\ (or: \emph{Thinking with functions})
+#+AUTHOR:    John Wiegley and Conal Elliott
+#+EMAIL:     john@dfinity.org
+#+DATE:      2018-09-10
 
 #+DESCRIPTION:
 #+KEYWORDS:
@@ -16,74 +16,252 @@
 
 * Specification
 
-Choose the simplest mathematical object that reflects your intention:
+** Specification
 
-** Mathematical object
-#+begin_src haskell
-PublicKey → Sum Coin
+Choose the simplest mathematical object that captures your intention.
+
+** What is Bitcoin?
+*** A functional view
+#+begin_src coq
+Definition Transaction := PublicKey -> Sum Z.
+Definition Bitcoin     := PublicKey -> Sum N.
 #+end_src
-*** This is often a function or a relation
-** Define a vocabulary for the domain in terms of this object
-Where does this vocabulary come from? It's a bad choice if it comes from a
-mind rooted in operational thinking. Are they a domain expert, or an engineer,
-or a mathematician? Each will bring their own biases into the process, which
-might be the incorrect vocabulary.
 
-For example, if you ask a programmer what an image is, he may not come up
-with a properly mathematical vocabulary for working with images.  Engineers
-are used to making machines do things, and so their vocabulary is typically
-machine-like.
+** Define an algebra over that specification
 
-This requires thinking about the domain, and not the implementation *at all*.
+#+begin_src coq
+Definition query (who : PublicKey) (b : Bitcoin) : N :=
+  b who.
 
-Conal starts with the result type of the denotation function, rather than the
-vocabulary.
-** Generalize the object as much as possible, erring on the side of naivety
-... because we're optimizing for simplicity in the specification
+Definition exchange (f t : PublicKey) (amount : Int) :
+  Transaction a :=
+  fun owner =>
+    mkSum (
+      if eqPublicKey f t
+      then 0
+      else if eqPublicKey f owner
+           then 0 - amount
+           else if eqPublicKey t owner
+                then amount
+                else 0).
+#+end_src
 
-a -> b?
-** Identify all algebras known for the object
-Functor
-Representable Functor
-Applicative
-Monad
-Monoid a => Monoid
-Category
-Cartesian?
-Closed?
-etc.
+** Relating Transactions to Bitcoin
+
+#+begin_src coq
+Definition ValidTransaction
+    `(t : Transaction) (b : Bitcoin) : Prop :=
+  forall h : PublicKey,
+    let '(mkSum b') := b h in
+    let '(mkSum t') := t h in
+    0 <= NtoZ b' + t'.
+
+Program Definition applyTransaction
+    `(t : Transaction) (b : Bitcoin) :
+    ValidTransaction t b -> Bitcoin :=
+  fun H => mappend (fmap (fmap (ZtoN _)) t) b.
+#+end_src
+
+** Taking an ideal view
+
+\vfill
+
+The domain of the specification has no "storage" or other limits; it is
+continuous and infinite. There are no objects to be considered, only
+functional relationships. Even thinking about ideas such as State or
+sequencing at this stage is typically unwarranted.
+
+\vfill
+
+#+begin_quote
+"A mathematician, like a painter or a poet, is a maker of patterns. If his
+patterns are more permanent than theirs, it is because they are made with
+ideas."---G. H. Hardy
+#+end_quote
+
+** Multiparty exchange
+
+Considering only the specification so far, the meaning of multi-party
+transactions is natural:
+
+\vfill
+
+\[ applyTransaction\ (t1 \otimes t2 \otimes t3 \otimes t4)\ b\ \_  \]
+
+\vfill
+
+*** Note
+:PROPERTIES:
+:BEAMER_act: <2->
+:END:
+
+Individual transactions could be invalid while the aggregate remains valid.
+
+** Where does this algebra come from?
+
+- Devising the specification and its unique vocabulary is creative work!
+
+- Many specifications will support well known algebras: functors, monads,
+  monoids, categories, etc.
+
+- For example, the =Blockchain= specification forms a monoid, so we might
+  expect its denotation to be a monoid homomorphism:
+\[ denote\ mempty = mempty \]
+\[ denote\ (x \otimes y) = denote\ x \otimes denote\ y \]
+
+** Generalizing further
+
+- Once you have a specification and an set of algebras, can they be
+  generalized further? For example, is a blockchain really about coins, or
+  just ownership in general?
+
+\vspace{0.5ex}
+#+begin_src coq
+Definition Bitcoin (a : Type) := PublicKey -> a.
+#+end_src
+
+- This is now a monoid only if =a= is a monoid, but it becomes: a representable
+  functor, an applicative, and a monad. The denotation must be a homomorphism
+  for each algebra of significance, guiding its development.
+
+- We generalize to optimize for simplicity in the specification.
+
+** Over-specialization
+
+- The opposite of not generalizing enough.
+
+- For example, familiarity with monads may lend us to reach for =State= whenever
+  it seems like a thing is being "updated"
+
+- Wouldn't it be odd if addition were specified as:
+#+begin_src haskell
+(+) :: Int -> State Int ()
+#+end_src
+
+- Monadic notation also makes it inconvenient to not single-thread things.
 
 * Representation
 
-** Choose a construction that represents a more concrete form
-May still be a function or relation, in which case it merely refines the
-specification; but it might be something concrete, like a data type, that
-provide a carrier for the algebras.
+** Choosing a representation
+
+- With a specification in hand, we need a construction that represents a more
+  computable form.
+
+- It may still be a function, or relation, only refining the specification; or
+  it may be something concrete, such as a data structure.
+
+** Example: TransactionR
+
+#+begin_src coq
+Inductive TransactionR :=
+  | Exchange (from to : PublicKey) (amount : nat).
+#+end_src
+
+** Some things to note
+
+- While the specification allows for multi-party and atomic transactions, this
+  representation does not.
+
+- =TransactionR= is not a monoid; perhaps a list of =TransactionR= better
+  represents what we meant?
+
+- However, this implies a sequence on transactions, which the spec does not.
+
+- It is easy to start with =TransactionR=---avoiding the exercise of working out
+  =Transaction=---and to miss such discrepancies.
+
+** Example: BitcoinR
+
+#+begin_src coq
+Definition BitcoinR := list (PublicKey * nat).
+#+end_src
+
+** Some things to note
+
+- May satisfy the spec, but does not allow examination of history (something
+  the spec neither addresses, nor rules out).
+
+- Monoidal append is extremely expensive; the specification never had to
+  consider costs!
 
 * Denotation
 
-** Denote the more concrete form into the specification, using a function or relation
-denote : Repr -> Spec
-denoteP : Repr -> Spec -> Prop
-** Work out all algebraic homomorphisms over the denotation
-... for all algebras of the specification, including the established vocabulary
-** Solving these yields definitions of those algebras over the more concrete form
-       denote mempty   = mempty                 ; unknown: mempty on the left
-∀ u v, denote (u <> v) = denote u <> denote v   ; unknown: the mappend on the left
+** Denotation
 
-Strengthing is one of the activities of this solving step.
+The denotation relates representation to specification.
 
-You now have an implementation of the specification for the concrete form
-which may be computable, or serve as a more refined specification.
+** Denotation
 
-# Banking : Holder -> Amount
+#+begin_src coq
+Definition transactionD (t : TransactionR) :
+  Transaction :=
+  fun holder =>
+    match t with
+    | Exchange from to amount =>
+      if eqPublicKey holder to
+      then mkSum amount
+      else if eqPublicKey holder from
+           then mkSum (0 - amount)
+           else mkSum 0%nat
+    end.
+#+end_src
 
-# Transaction -> Banking -> Banking
+** Denotation
 
-# + :: Int -> State Int ()
+#+begin_src coq
+Program Fixpoint bankD (t : BankR) : Bank :=
+  fun holder =>
+    match t with
+    | nil => mkSum 0%nat
+    | (h, amount) :: xs =>
+      if eqPublicKey holder h
+      then mkSum amount
+      else bankD xs holder
+    end.
+#+end_src
 
-# Monadic notation makes it very inconvenient for people not to single-thread
-# things.
+** Homomorphism
+
+It must be a homomorphism, for example over the =exchange= function:
+
+#+begin_src coq
+Theorem TransactionR_exchange : forall f t amount,
+  transactionD (Exchange f t amount)
+    = exchange f t amount.
+Proof.
+  unfold transactionD, exchange; intros.
+  extensionality i.
+  now repeat destruct (eqPublicKey _ _) in |- *.
+Qed.
+#+end_src
+
+** Working backward
+
+- Although we can choose a representation and try to prove the homomorphism
+  equations, alternatively we can take the denoted object as unknown, and use
+  equational reasoning to solve for it:
+
+#+begin_src coq
+exists x, transactionD x = exchange f t amount
+#+end_src
+
+- The advantage being that often, there are many choices to be made with
+  different trade-offs. Doing the proof search manually makes these choices
+  apparent.
+
+* Conclusion
+
+** Conclusion
+
+The basic idea reduces to a few steps:
+
+  1. Think of the functions or relations that model your interest.
+  2. Find the algebras already expressed by your model.
+  3. Determine a vocabulary that expresses what you want to do;
+     step 2 may find many of these for you!
+  4. Find a representation to encode the functional behavior.
+  5. Define the denotation from this back to the specification.
+  6. Prove that the denotation it is a homomorphic over your vocabulary.
 
 * Colophon
 
@@ -98,20 +276,20 @@ which may be computable, or serve as a more refined specification.
 #+COLUMNS: %20ITEM %13BEAMER_env(Env) %6BEAMER_envargs(Args) %4BEAMER_col(Col) %7BEAMER_extra(Extra)
 
 #+LaTeX_CLASS: beamer
-#+LaTeX_CLASS_OPTIONS: [show notes, t]
+#+LaTeX_CLASS_OPTIONS: [utf8x,notes,c]
 
 #+LATEX_HEADER_EXTRA: \usepackage{fontspec}
-# #+LATEX_HEADER_EXTRA: \setmainfont{Helvetica Neue LT Std}
-#+LATEX_HEADER_EXTRA: \setmainfont{Liberation Serif}
-#+LATEX_HEADER_EXTRA: \setsansfont{Liberation Sans}
-#+LATEX_HEADER_EXTRA: \setmonofont[SmallCapsFont={Liberation Mono}]{Liberation Mono}
 #+LATEX_HEADER_EXTRA: \usepackage{svg}
 #+LATEX_HEADER_EXTRA: \usepackage{export}
+#+LATEX_HEADER_EXTRA: \usepackage{underscore}
 #+LATEX_HEADER_EXTRA: \usepackage{pdfcomment}
 #+LATEX_HEADER_EXTRA: \usepackage{unicode-math}
 #+LATEX_HEADER_EXTRA: \usepackage{minted}
 #+LATEX_HEADER_EXTRA: \usepackage{tikz}
 #+LATEX_HEADER_EXTRA: \usepackage{tikz-cd}
+#+LATEX_HEADER_EXTRA: \setmainfont{Liberation Serif}
+#+LATEX_HEADER_EXTRA: \setsansfont{Liberation Sans}
+#+LATEX_HEADER_EXTRA: \setmonofont[SmallCapsFont={Liberation Mono}]{Liberation Mono}
 
 #+BEAMER_THEME: [height=16mm] Rochester
 #+BEAMER_COLOR: seahorse

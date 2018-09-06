@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiWayIf #-}
+
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
@@ -18,7 +20,10 @@ import qualified Data.Map as M
 import           Data.Monoid
 import           Data.Set (Set)
 import qualified Data.Set as S
+import           Numeric.Natural
 import           Test.Hspec
+
+{------------------------------------------------------------------------}
 
 infixr 0 ==>
 (==>) :: (HasCallStack, Show a, Eq a) => a -> a -> Expectation
