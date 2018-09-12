@@ -16,21 +16,25 @@
 
 * Specification
 
-** Specification
+** Roadmap
+[[file:verification-roadmap.png]]
+** Denotation
 
-Choose the simplest mathematical object that captures your intention.
+- Choose the simplest mathematical object that captures your intention.
 
-** What is Bitcoin?
+- Often a function or relation, though not necessarily.
+
+** What is a Bank?
 *** A functional view
 #+begin_src coq
 Definition Transaction := PublicKey -> Sum Z.
-Definition Bitcoin     := PublicKey -> Sum N.
+Definition Bank        := PublicKey -> Sum N.
 #+end_src
 
-** Define an algebra over that specification
+** Define an algebra over that denotation
 
 #+begin_src coq
-Definition query (who : PublicKey) (b : Bitcoin) : N :=
+Definition query (who : PublicKey) (b : Bank) : N :=
   b who.
 
 Definition exchange (f t : PublicKey) (amount : Int) :
@@ -46,30 +50,41 @@ Definition exchange (f t : PublicKey) (amount : Int) :
                 else 0).
 #+end_src
 
-** Relating Transactions to Bitcoin
+** Determine the laws of this algebra
+
+#+begin_src coq
+Definition query_self_exchange :=
+  forall o n b, query o (exchange o o n) b = query o b.
+
+Definition query_exchange_all :=
+  forall o n b, query f (exchange f t (query f b)) b = 0.
+#+end_src
+
+** Relating Transactions to Bank
 
 #+begin_src coq
 Definition ValidTransaction
-    `(t : Transaction) (b : Bitcoin) : Prop :=
+    `(t : Transaction) (b : Bank) : Prop :=
   forall h : PublicKey,
     let '(mkSum b') := b h in
     let '(mkSum t') := t h in
     0 <= NtoZ b' + t'.
 
 Program Definition applyTransaction
-    `(t : Transaction) (b : Bitcoin) :
-    ValidTransaction t b -> Bitcoin :=
+    `(t : Transaction) (b : Bank) :
+    ValidTransaction t b -> Bank :=
   fun H => mappend (fmap (fmap (ZtoN _)) t) b.
 #+end_src
 
 ** Taking an ideal view
 
-\vfill
+- The domain of the denotation has no "storage" or other limits; e.g., it is
+  infinite and may even be continuous. There are no objects to be considered,
+  only functional relationships. Even thinking about ideas such as State or
+  sequencing at this stage is typically unwarranted.
 
-The domain of the specification has no "storage" or other limits; it is
-continuous and infinite. There are no objects to be considered, only
-functional relationships. Even thinking about ideas such as State or
-sequencing at this stage is typically unwarranted.
+- For example, since the "state" of the DFINITY network is a product of all
+  past actions, it need not be considered in the denotation.
 
 \vfill
 
@@ -81,7 +96,7 @@ ideas."---G. H. Hardy
 
 ** Multiparty exchange
 
-Considering only the specification so far, the meaning of multi-party
+Considering only the specification so far, the meaning of multi- party
 transactions is natural:
 
 \vfill
@@ -99,32 +114,40 @@ Individual transactions could be invalid while the aggregate remains valid.
 
 ** Where does this algebra come from?
 
-- Devising the specification and its unique vocabulary is creative work!
+- Finding the denotation and its unique vocabulary is creative work!
 
-- Many specifications will support well known algebras: functors, monads,
+- Many denotations will support well known algebras: functors, monads,
   monoids, categories, etc.
 
-- For example, the =Blockchain= specification forms a monoid, so we might
-  expect its denotation to be a monoid homomorphism:
+- For example, the =Bank= denotation forms a monoid, so we might expect its
+  denotation to be a monoid homomorphism:
 \[ denote\ mempty = mempty \]
 \[ denote\ (x \otimes y) = denote\ x \otimes denote\ y \]
 
 ** Generalizing further
 
-- Once you have a specification and an set of algebras, can they be
-  generalized further? For example, is a blockchain really about coins, or
-  just ownership in general?
+- Once you have a denotation and an set of algebras, can they be generalized
+  further? For example, is our bank really about coins, or just ownership in
+  general?
 
 \vspace{0.5ex}
 #+begin_src coq
-Definition Bitcoin (a : Type) := PublicKey -> a.
+Definition Bank (a : Type) := PublicKey -> a.
 #+end_src
 
 - This is now a monoid only if =a= is a monoid, but it becomes: a representable
   functor, an applicative, and a monad. The denotation must be a homomorphism
   for each algebra of significance, guiding its development.
 
-- We generalize to optimize for simplicity in the specification.
+- We generalize to optimize for simplicity in the specification, and also to
+  reveal and eliminate unnecessary limitations.
+
+\vspace{0.5ex}
+#+begin_src coq
+Definition exchange `{Eq k} `{Group v}
+           (f t : k) (amount : v) :
+  Transaction k v := ...
+#+end_src
 
 ** Over-specialization
 
@@ -133,12 +156,14 @@ Definition Bitcoin (a : Type) := PublicKey -> a.
 - For example, familiarity with monads may lend us to reach for =State= whenever
   it seems like a thing is being "updated"
 
-- Wouldn't it be odd if addition were specified as:
+- It would be odd if addition were specified as:
 #+begin_src haskell
 (+) :: Int -> State Int ()
 #+end_src
 
-- Monadic notation also makes it inconvenient to not single-thread things.
+- Monadic notation also makes it inconvenient not to single-thread things.
+  Like imperative programming, it encourages unnecessary and unhelpful
+  sequentiality in specification and implementation.
 
 * Representation
 
@@ -146,6 +171,10 @@ Definition Bitcoin (a : Type) := PublicKey -> a.
 
 - With a specification in hand, we need a construction that represents a more
   computable form.
+
+- Where denotations optimize for reasoning (simplicity and rigor),
+  representations optimize for operational considerations such as efficient
+  computability.
 
 - It may still be a function, or relation, only refining the specification; or
   it may be something concrete, such as a data structure.
@@ -165,39 +194,32 @@ Inductive TransactionR :=
 - =TransactionR= is not a monoid; perhaps a list of =TransactionR= better
   represents what we meant?
 
-- However, this implies a sequence on transactions, which the spec does not.
+- A list representation, however, would suggest sequential transactions, which
+  the spec does not.
 
 - It is easy to start with =TransactionR=---avoiding the exercise of working out
-  =Transaction=---and to miss such discrepancies.
+  =Transaction=---and miss such discrepancies.
 
-** Example: BitcoinR
+** Example: BankR
 
 #+begin_src coq
-Definition BitcoinR := list (PublicKey * nat).
+Definition BankR := list (PublicKey * nat).
 #+end_src
 
-** Some things to note
+* Implementation
 
-- May satisfy the spec, but does not allow examination of history (something
-  the spec neither addresses, nor rules out).
+** Denoting function
 
-- Monoidal append is extremely expensive; the specification never had to
-  consider costs!
+The denotating function relates the representation to specification.
 
-* Denotation
-
-** Denotation
-
-The denotation relates representation to specification.
-
-** Denotation
+** Denoting function
 
 #+begin_src coq
 Definition transactionD (t : TransactionR) :
   Transaction :=
   fun holder =>
     match t with
-    | Exchange from to amount =>
+    | Exchange from to amount =><
       if eqPublicKey holder to
       then mkSum amount
       else if eqPublicKey holder from
@@ -206,7 +228,7 @@ Definition transactionD (t : TransactionR) :
     end.
 #+end_src
 
-** Denotation
+** Denoting function
 
 #+begin_src coq
 Program Fixpoint bankD (t : BankR) : Bank :=
@@ -220,7 +242,7 @@ Program Fixpoint bankD (t : BankR) : Bank :=
     end.
 #+end_src
 
-** Homomorphism
+** Proving homomorphisms
 
 It must be a homomorphism, for example over the =exchange= function:
 
@@ -237,17 +259,17 @@ Qed.
 
 ** Working backward
 
-- Although we can choose a representation and try to prove the homomorphism
-  equations, alternatively we can take the denoted object as unknown, and use
-  equational reasoning to solve for it:
+- Although we can choose a representation and then prove the homomorphism
+  equations, alternatively we could say that API design is about tasteful
+  formulation of algebra problems, and implementation is the solving of those
+  problems for some representation.
 
 #+begin_src coq
 exists x, transactionD x = exchange f t amount
 #+end_src
 
-- The advantage being that often, there are many choices to be made with
-  different trade-offs. Doing the proof search manually makes these choices
-  apparent.
+- The advantage being that often, as there are many choices to be made with
+  different trade-offs, doing the proof makes these choices apparent.
 
 * Conclusion
 
@@ -255,13 +277,17 @@ exists x, transactionD x = exchange f t amount
 
 The basic idea reduces to a few steps:
 
-  1. Think of the functions or relations that model your interest.
-  2. Find the algebras already expressed by your model.
-  3. Determine a vocabulary that expresses what you want to do;
-     step 2 may find many of these for you!
-  4. Find a representation to encode the functional behavior.
-  5. Define the denotation from this back to the specification.
-  6. Prove that the denotation it is a homomorphic over your vocabulary.
+  1. Think of mathematical objects that model your interest.
+  2. Discover algebraic abstractions (monoid, group, functor, etc) your model
+     already belongs to.
+  3. Determine a vocabulary to express what you want to do; known algebras
+     take advantage of centuries of prior thought, so look for forms that rely
+     on these.
+  4. Find a representation that encodes the desired capabilities.
+  5. Define a function from representation to denotation.
+  6. Prove that this function is homomorphic over all algebras.
+
+[[https://github.com/conal/talk-2014-lambdajam-denotational-design]]
 
 * Colophon
 

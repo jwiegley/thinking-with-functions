@@ -48,7 +48,7 @@
 (setq org-latex-minted-options
       '(("fontsize" "\\footnotesize")
         ("linenos" "false")
-        ("xleftmargin" "2em")))
+        ("xleftmargin" "0em")))
 
 (setq org-export-latex-minted-options
       '(("fontsize" "\\small")
