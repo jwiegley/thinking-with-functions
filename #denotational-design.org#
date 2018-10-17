@@ -42,12 +42,12 @@ Definition exchange (f t : PublicKey) (amount : N) :
   fun owner =>
     mkSum (
       if eqPublicKey f t
-      then mempty
+      then 0
       else if eqPublicKey f owner
            then mkSum (0 - NtoZ amount)
            else if eqPublicKey t owner
                 then amount
-                else mempty).
+                else 0).
 #+end_src
 
 ** Determine the laws of this algebra

@@ -141,4 +141,4 @@ in rec {
 
     env = pkgs.buildEnv { name = name; paths = buildInputs; };
   };
-}
+}.denotational-design
