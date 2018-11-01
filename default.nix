@@ -52,18 +52,6 @@ let
     ".aux" ".cabal" ".log" ".nav" ".out" ".pdf" ".snm" ".svg"
     ".tex" ".toc" ".upa" ".vrb"
   ];
-
-  filterSource = src: with pkgs.stdenv.lib; cleanSourceWith {
-    inherit src;
-    filter = path: type:
-      let baseName = baseNameOf path; in
-      !( type == "directory"
-         && builtins.elem baseName ([".git"] ++ ignoredDirs))
-      &&
-      !( type == "unknown"
-         || baseName == "result"
-         || any (suf: hasSuffix suf path) ignoredSuffixes);
-  };
 in rec {
   org-support-code =
     pkgs.haskellPackages.callCabal2nix "org-support-code"
