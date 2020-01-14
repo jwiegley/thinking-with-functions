@@ -1,6 +1,6 @@
 #+TITLE:     Denotational Design \\ (or: \emph{Thinking with functions})
 #+AUTHOR:    John Wiegley and Conal Elliott
-#+EMAIL:     john@dfinity.org
+#+EMAIL:     johnw@newartisans.com
 #+DATE:      2018-09-10
 
 #+DESCRIPTION:
@@ -83,7 +83,7 @@ Program Definition applyTransaction
   only functional relationships. Even thinking about ideas such as State or
   sequencing at this stage is typically unwarranted.
 
-- For example, since the "state" of the DFINITY network is a product of all
+- For example, since the "state" of the blockchain network is a product of all
   past actions, it need not be considered in the denotation.
 
 \vfill
