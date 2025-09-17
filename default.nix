@@ -31,7 +31,7 @@ let
     buildInputs = [ pkgs.emacs26 ] ++ (with pkgs; [ texinfo perl which ]);
     meta = {
       homepage = "https://elpa.gnu.org/packages/org.html";
-      license = pkgs.stdenv.lib.licenses.free;
+      license = pkgs.lib.licenses.free;
     };
   };
 
@@ -55,7 +55,7 @@ let
 in rec {
   org-support-code =
     pkgs.haskellPackages.callCabal2nix "org-support-code"
-      (with pkgs.stdenv.lib; cleanSourceWith {
+      (with pkgs.lib; cleanSourceWith {
          src = ./.;
          filter = path: type:
            let baseName = baseNameOf path; in
